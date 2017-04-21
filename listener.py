@@ -1,77 +1,58 @@
-#  This script allow to listen UDP request on the 15555 port 
+#  This script allows listening to UDP request on port 15555
 #
-#  V1.0 can receive keepAlive or Data, and show it on the console
-#  You only need to run this program and wait for input
+#  V1.1 can receive keepAlive or Data, and display it on the console
+#  Run this program and wait for incomming UDP packets
 
-
-
+import sys
 import socket
 import json
 import base64
 
 
-#OPENING THE SOCKET ON THE 15555 PORT
+# OPENING SOCKET ON PORT 15555
 socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 socket.bind(('', 15555))
 
+cur_version = sys.version_info # base64.decode differs from python 2.7 to 3.x
 
-while True: #NEVER STOP
+print("Gateway listener starts\n")
+data = bytearray(480)
+
+while True: # NEVER STOP
     
-    
-    data,addr = socket.recvfrom(480) #WE ARE LISTENING
-        
-    i=0
-    adresseMac=""
-            
-    for char in data:
-        #FIND MAC ADRESS
-        if(i>3 and i<10): 
-            caracHexa = hex(char)
-            caracHexa = caracHexa[2:4] #WE ONLY TAKE THE AB FROM 0XAB
-            if(i==9):
-                adresseMac = adresseMac + caracHexa
-            else :
-                adresseMac = adresseMac + caracHexa +":"
-            i=i+1
+    nbytes,addr = socket.recvfrom_into(data, 480)
+
+    if( nbytes > 0 ):
+        macAddress=""
+        for i in range(4, 8):
+            macAddress += '{:02X}'.format(data[i]) + ":"
+        macAddress += '{:02X}'.format(data[9]) # do not add ":" after last char
+                        
+        if( nbytes == 12 ):
+            #KEEPALIVE MESSAGE HAS A LENGTH = 12
+            print("KeepAlive received from : "+macAddress+"\n")
         else :
-            i=i+1
-                    
-                    
-                    
-                    
-                    
-    if(len(data)==12):
-        #KEEPALIVE MESSAGE HAS A LENTH + 12
-        print("keepAlive receveied from "+adresseMac+"\n")
-    else :
-        #DATA TRANSMITTED    
-        donnee2=data[12:].decode('utf8') #THIS IS THE DATA
-        dico = json.loads(donnee2) #IN JSON FORMAT
-        liste = dico["lwpk"] #GIVE US A LISTE
-        dic=liste[0] #GET THE DICTIONNARY
-            
-        print("Data received from gateway : "+adresseMac)
-        print("Sent from "+dic['deui'])
-        
-        size = dic['size']
-        secret = dic['data']
-        x=0
-        msgfini=""
+            #DATA TRANSMITTED    
+            data2=data[12:nbytes].decode('utf8') #THIS IS THE DATA PART
+            dico = json.loads(data2) #AFFECT TO JSON OBJECT
+            list = dico["lwpk"] #CONVERT TO LIST FORMAT
+            dic=list[0] #GET FIRST ITEM OF DICTIONNARY
                 
-        msgdec=base64.b64decode(secret, altchars=None, validate=False) #DECODING THE MESSAGE
-        for char in msgdec: #FOR EACH BYTE 
-            byte = hex(char)
-            byte = byte[2:4]
-            msgfini=msgfini+byte+" "
-
-                
-        print("DATA : "+msgfini)
-        print("JSON value sent : "+donnee2+"\n")
+            print("Data received from gateway : "+macAddress)
+            print("Sent from device : "+dic['deui'])
             
+            size = dic['size']
+            secret = dic['data']
+            message=""
+                    
+            msgdec=base64.b64decode(secret, altchars=None) #DECODE MESSAGE
+            if( cur_version >= (3, 0) ):
+                for char in msgdec: #FOR EACH BYTE 
+                    message += '{:02X}'.format(char)
+            else:
+                 for char in msgdec: #FOR EACH CHAR 
+                    message += '{:02X}'.format(ord(char))
+                   
+            print("Decoded message : "+message)
+            print("JSON : "+data2+"\n")
             
-            
-            
-        
-
-
-        
