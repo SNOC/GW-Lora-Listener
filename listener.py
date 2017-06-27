@@ -24,7 +24,7 @@ while True: # NEVER STOP
 
     if( nbytes > 0 ):
         macAddress=""
-        for i in range(4, 8):
+        for i in range(4, 9):
             macAddress += '{:02X}'.format(data[i]) + ":"
         macAddress += '{:02X}'.format(data[9]) # do not add ":" after last char
                         
