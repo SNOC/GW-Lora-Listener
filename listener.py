@@ -1,6 +1,6 @@
 #  This script allows listening to UDP request on port 15555
 #
-#  V1.1 can receive keepAlive or Data, and display it on the console
+#  V1.2 can receive keepAlive or Data, and display it on the console
 #  Run this program and wait for incomming UDP packets
 
 import sys
@@ -24,13 +24,13 @@ while True: # NEVER STOP
 
     if( nbytes > 0 ):
         macAddress=""
-        for i in range(4, 9):
+        for i in range(4, 11):
             macAddress += '{:02X}'.format(data[i]) + ":"
         macAddress += '{:02X}'.format(data[9]) # do not add ":" after last char
                         
         if( nbytes == 12 ):
             #KEEPALIVE MESSAGE HAS A LENGTH = 12
-            print("KeepAlive received from : "+macAddress+"\n")
+            print("KeepAlive received from Gateway EUI: "+macAddress+"\n")
         else :
             #DATA TRANSMITTED    
             data2=data[12:nbytes].decode('utf8') #THIS IS THE DATA PART
