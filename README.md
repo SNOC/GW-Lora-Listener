@@ -21,7 +21,7 @@ Python interpreter 2.5 or higher
 
 The script can show two kinds of messages :
 
--if the transmitter sends a keepAlive request, the script will display the gateway mac adress
+-if the transmitter sends a keepAlive request, the script will display the gateway EUI
 
 -if the transmitter sends a data packet, the script will display the gateway mac adress, transmitter id, received data and JSON sent by the Lora Gateway.
 
